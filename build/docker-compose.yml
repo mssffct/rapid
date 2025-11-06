@@ -1,0 +1,71 @@
+services:
+  broker:
+    container_name: broker
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - cache
+      - db
+    environment:
+      DOCKERIZED: 1
+    volumes:
+      - broker-logs:/app/server/logs
+    env_file: .env
+    networks:
+      - rapid
+
+  db:
+    container_name: db
+    image: postgres:17.6
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASS}
+      - POSTGRES_DB=${POSTGRES_DB_NAME}
+    #    expose:
+    #      - ${POSTGRES_PORT}
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    restart: always
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -p ${POSTGRES_PORT} -h ${POSTGRES_HOST} -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: -p ${POSTGRES_PORT}
+    networks:
+      - rapid
+
+  cache:
+    image: memcached:1.6-alpine
+    container_name: cache
+    restart: always
+    expose:
+      - ${MEMCACHED_PORT}
+    entrypoint:
+      - memcached
+      - -m 64
+    networks:
+      - rapid
+
+volumes:
+  broker-logs:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: /usr/rapid/logs
+  db-volume:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: /usr/rapid/postgres
+
+
+networks:
+  rapid:
+    driver: bridge

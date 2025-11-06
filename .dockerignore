@@ -1,0 +1,10 @@
+.venv
+
+server/.ruff_cache
+server/.pytest_cache
+server/logs
+
+*.sqlite3
+
+frontend/node_modules
+frontend/build
