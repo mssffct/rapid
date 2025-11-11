@@ -6,13 +6,17 @@ services:
       dockerfile: ./build/Dockerfile
     restart: unless-stopped
     depends_on:
-      - cache
-      - db
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     environment:
       DOCKERIZED: 1
+    ports:
+      - "8014:8014"
     volumes:
       - broker-logs:/app/server/logs
-    env_file: .env
+    env_file: "../.env"
     networks:
       - rapid
 
@@ -42,12 +46,17 @@ services:
   cache:
     image: memcached:1.6-alpine
     container_name: cache
-    restart: always
+    restart: unless-stopped
     expose:
       - ${MEMCACHED_PORT}
     entrypoint:
       - memcached
       - -m 64
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11211"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - rapid
 
