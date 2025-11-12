@@ -1,40 +1,21 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+FROM python:3.13-slim-bookworm
 
-# Enable bytecode compilation
-# Copy from the cache instead of linking since it's a mounted volume
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV PYTHONUNBUFFERED=1
 
-# Ensure installed tools can be executed out of the box
-ENV UV_TOOL_BIN_DIR=/usr/local/bin
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTE=1
+
+ENV UV_LINK_MODE=copy
 
 WORKDIR /app
 
-# Install the project's dependencies using the lockfile and settings
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=./server/uv.lock,target=./server/uv.lock \
-    --mount=type=bind,source=./server/pyproject.toml,target=./server/pyproject.toml \
-    uv sync --locked --no-install-project --no-dev
-COPY . /app
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
-
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.12-slim
-
-# Setup a non-root user
-RUN groupadd --system --gid 999 nonroot \
-    && useradd --system --gid 999 --uid 999 --create-home nonroot
-
-# Copy the application from the builder
-COPY --from=builder --chown=nonroot:nonroot /app /app
-
-# Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Use the non-root user to run our application
-USER nonroot
+# Copy the project into the image
+COPY ./server/ /app
 
-# Use `/app` as the working directory
-WORKDIR /app
+# Sync the project
+RUN uv sync --locked
 
-# Run the FastAPI application by default
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8012"]
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8014", "--reload"]
