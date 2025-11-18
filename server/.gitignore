@@ -15,3 +15,5 @@ __pycache__/
 
 # logs
 logs/
+
+app/.env

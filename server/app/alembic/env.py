@@ -7,11 +7,6 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-import sys
-from os.path import dirname, abspath
-
-sys.path.insert(0, dirname(dirname(abspath(__file__))))
-
 from database import DATABASE_URL, Base
 from users.models import User
 
@@ -32,7 +27,6 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
-
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -76,13 +70,11 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
-
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
 

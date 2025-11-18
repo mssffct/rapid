@@ -23,11 +23,8 @@ services:
   db:
     container_name: db
     image: postgres:17.6
-    env_file: .env-dev
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASS}
-      - POSTGRES_DB=${POSTGRES_DB_NAME}
+    env_file:
+      - .env-dev
     #    expose:
     #      - ${POSTGRES_PORT}
     ports:
