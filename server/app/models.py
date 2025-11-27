@@ -1,9 +1,8 @@
 from sqlalchemy import Text, Enum
 from sqlalchemy.orm import Mapped, mapped_column
-from database import Base, int_pk
 
-
-from core_types import states, auth
+from app.database import Base, int_pk
+from app.core_types import states, auth
 
 
 class User(Base):

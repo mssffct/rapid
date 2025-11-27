@@ -8,9 +8,11 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
+    SECRET_KEY: str
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     )
+    ALGORITHM: str = "HS256"
 
 
 settings = Settings()
