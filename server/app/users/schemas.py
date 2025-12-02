@@ -1,5 +1,6 @@
 # users/schemas.py
 from pydantic import BaseModel
+from uuid import UUID
 
 class UserCreate(BaseModel):
     name: str
@@ -9,7 +10,7 @@ class UserCreate(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: int
+    uuid: UUID
     name: str
     real_name: str | None = None
     state: str | None = None

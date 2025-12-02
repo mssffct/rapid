@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from uuid import UUID
 
 class UserBase(BaseModel):
     name: str
@@ -11,8 +12,8 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    id: int
-    disabled: bool
+    uuid: UUID
+    state: str
 
     class Config:
         from_attributes = True

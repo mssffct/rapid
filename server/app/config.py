@@ -1,6 +1,7 @@
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     POSTGRES_HOST: str
@@ -14,9 +15,13 @@ class Settings(BaseSettings):
     )
     ALGORITHM: str = "HS256"
 
+    @field_validator("POSTGRES_HOST", mode="before")
+    @classmethod
+    def get_postgres_host(cls, val: str) -> str:
+        return "db" if os.getenv("DOCKERIZED") else val
+
 
 settings = Settings()
-
 
 def get_db_url():
     return (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"

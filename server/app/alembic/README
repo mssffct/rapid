@@ -1,1 +1,5 @@
 Generic single-database configuration with an async dbapi.
+
+from server directory run
+alembic -c app/alembic.ini revision --autogenerate -m"migration name"
+alembic -c app/alembic.ini upgrade head

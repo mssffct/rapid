@@ -29,7 +29,7 @@ async def get_current_user(
         token_data = TokenData(name=name)
     except JWTError:
         raise credentials_exception
-    user = await get_user(db_session, token_data.username) # Используем db_session
+    user = await get_user(db_session, token_data.name) # Используем db_session
     if user is None:
         raise credentials_exception
     return PydanticUser(**user.__dict__) # Преобразуем объект DBUser в PydanticUser

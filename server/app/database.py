@@ -1,3 +1,4 @@
+from uuid import uuid4, UUID
 from datetime import datetime
 from typing import Annotated
 
@@ -14,6 +15,7 @@ AsyncSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=e
 
 # настройка аннотаций
 int_pk = Annotated[int, mapped_column(primary_key=True)]
+uuid_pk: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
 created_at = Annotated[datetime, mapped_column(server_default=func.now())]
 updated_at = Annotated[datetime, mapped_column(server_default=func.now(), onupdate=datetime.now)]
 str_uniq = Annotated[str, mapped_column(unique=True, nullable=False)]
