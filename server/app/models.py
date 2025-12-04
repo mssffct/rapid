@@ -2,8 +2,8 @@ from sqlalchemy import Text, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid import UUID, uuid4
 
-from app.database import Base, int_pk
-from app.core_types import states, auth
+from app.database import Base
+from app.core.types import states, auth
 
 
 class User(Base):
@@ -28,3 +28,7 @@ class User(Base):
 
     def __repr__(self):
         return str(self)
+
+    def is_admin(self):
+        """Check if user has admin rights"""
+        return self.role in (auth.UserRoles.STAFF_ADMIN, auth.UserRoles.LICENSE_ADMIN)
