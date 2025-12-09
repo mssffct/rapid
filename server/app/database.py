@@ -43,7 +43,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 
 async def get_db_session():
-    """Зависимость FastAPI для получения асинхронной сессии базы данных."""
+    """FastAPI dependency to get async database session"""
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -52,6 +52,6 @@ async def get_db_session():
 
 
 async def init_db():
-    """Создает все таблицы в базе данных."""
+    """Creates database tables for app and testing"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -16,13 +16,13 @@ from app.auth.dependencies import get_current_user
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
+@router.post("/obtain_token", response_model=Token)
+async def obtain_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
-    Get jwt token.
+    Obtain jwt token.
     """
     user = await authenticate_user(db_session, form_data.username, form_data.password)
     if not user:
