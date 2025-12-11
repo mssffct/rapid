@@ -1,7 +1,7 @@
 import enum
 
 
-class UserStates(enum.StrEnum):
+class UserState(enum.StrEnum):
     ACTIVE = "A"
     INACTIVE = "I"
     BLOCKED = "B"

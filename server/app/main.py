@@ -7,10 +7,9 @@ from app.auth.routes import router as auth_router
 from app.users.routes import router as users_router
 from app.auth.schemas import User as PydanticUser
 from app.auth.dependencies import get_current_user
-from app.core.types.states import UserStates
+from app.core.types.states import UserState
 
 
-# --- Запуск и остановка приложения ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -18,8 +17,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="FastAPI Token Auth with PostgreSQL & Docker Compose",
-    description="A complete example of token-based authentication with FastAPI, PostgreSQL, and structured code.",
+    title="Broker Rapid",
+    description="VDI management tool",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -38,7 +37,7 @@ async def read_admin_data(current_user: PydanticUser = Depends(get_current_user)
     """
     Get admin routes
     """
-    if current_user.state == UserStates.ACTIVE and current_user.is_admin():
+    if current_user.state == UserState.ACTIVE and current_user.is_admin():
         return {"result": ["here admins routes"]}
     else:
         raise HTTPException(

@@ -11,10 +11,10 @@ class User(Base):
     name: Mapped[str]
     real_name: Mapped[str]
     state: Mapped[str] = mapped_column(
-        Enum(states.UserStates), nullable=False, default=states.UserStates.ACTIVE
+        Enum(states.UserState), nullable=False, default=states.UserState.ACTIVE
     )
     role: Mapped[str] = mapped_column(
-        Enum(auth.UserRoles), nullable=False, default=auth.UserRoles.DEMO
+        Enum(auth.UserRole), nullable=False, default=auth.UserRole.DEMO
     )
     password: Mapped[str] = mapped_column(Text, nullable=False, default="")
     data: Mapped[str] = mapped_column(Text, default="")
@@ -31,4 +31,4 @@ class User(Base):
 
     def is_admin(self):
         """Check if user has admin rights"""
-        return self.role in (auth.UserRoles.STAFF_ADMIN, auth.UserRoles.LICENSE_ADMIN)
+        return self.role in (auth.UserRole.STAFF_ADMIN, auth.UserRole.LICENSE_ADMIN)

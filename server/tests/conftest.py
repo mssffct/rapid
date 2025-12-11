@@ -1,35 +1,51 @@
+import pytest_asyncio
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from httpx import AsyncClient, ASGITransport
+
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from sqlalchemy import text
 
 from app.main import app
-from app.database import Base, init_db
+from app.config import get_db_url
+from app.database import Base, get_db_session
 
 API_URL = "/api/v1"
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///tests/test.db"
+TEST_DATABASE_URL = get_db_url("test")
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+test_engine = create_async_engine(TEST_DATABASE_URL)
+TestingSessionLocal = async_sessionmaker(
+    autocommit=False, autoflush=False, bind=test_engine, class_=AsyncSession
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
+@pytest_asyncio.fixture(scope="session", name="test_session", autouse=True)
+async def test_session():
+    async with TestingSessionLocal() as session:
+        yield session
+        # TODO deal with database cleanup and hanged test finish
+        async with test_engine.begin() as conn:
+            await conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+            await conn.run_sync(Base.metadata.create_all)
+            await conn.commit()
 
 
-@pytest.fixture()
-def test_db():
-    Base.metadata.create_all(bind=engine)
+@pytest_asyncio.fixture(scope="function", name="client", autouse=True)
+async def client(test_session):
+    app.dependency_overrides[get_db_session] = lambda: test_session
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def close_engine():
     yield
-    Base.metadata.drop_all(bind=engine)
-
-app.dependency_overrides[init_db] = override_get_db
-
-client = TestClient(app)
+    await test_engine.dispose()

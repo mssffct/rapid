@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
 
-from app.core.types.states import UserStates
+from app.core.types.states import UserState
 from app.database import get_db_session
 from app.models import User as DBUser
 from app.users.schemas import UserCreate, UserResponse, UserUpdate
@@ -34,7 +34,7 @@ async def create_user(
         real_name=user.real_name,
         password=hashed_password,
         role=user.role,
-        state=UserStates.ACTIVE,
+        state=UserState.ACTIVE,
     )
 
     db_session.add(db_user)

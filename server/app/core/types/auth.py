@@ -1,7 +1,7 @@
 import enum
 
 
-class UserRoles(enum.StrEnum):
+class UserRole(enum.StrEnum):
     DEMO = "D"
     PLAIN_USER = "PU"
     STAFF_ADMIN = "SA"

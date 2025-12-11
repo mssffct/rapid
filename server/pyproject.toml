@@ -14,6 +14,7 @@ dependencies = [
     "pwdlib[argon2]>=0.3.0",
     "pydantic-settings>=2.12.0",
     "pytest>=7.4.4",
+    "pytest-asyncio>=0.23.8",
     "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.20",
     "sqlalchemy>=2.0.44",
@@ -32,3 +33,6 @@ dev-dependencies = [
 exclude = [
     "app/alembic"
 ]
+
+[tool.pytest]
+asyncio_mode="auto"
