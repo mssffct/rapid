@@ -23,15 +23,18 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
-@pytest_asyncio.fixture(scope="session", name="test_session", autouse=True)
+@pytest_asyncio.fixture(scope="function", name="test_session", autouse=True)
 async def test_session():
+    async with test_engine.begin() as conn:
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.commit()
+
     async with TestingSessionLocal() as session:
-        yield session
-        # TODO deal with database cleanup and hanged test finish
-        async with test_engine.begin() as conn:
-            await conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
-            await conn.run_sync(Base.metadata.create_all)
-            await conn.commit()
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
 @pytest_asyncio.fixture(scope="function", name="client", autouse=True)

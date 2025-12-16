@@ -32,13 +32,17 @@ async def root():
     return {"message": "Welcome to the FastAPI Token Auth Example!"}
 
 
-@app.get("/api/v1/admin_routes/", tags=["admin_routes"])
+@app.get("/api/v1/routes_available", tags=["routes"])
 async def read_admin_data(current_user: PydanticUser = Depends(get_current_user)):
     """
     Get admin routes
     """
-    if current_user.state == UserState.ACTIVE and current_user.is_admin():
-        return {"result": ["here admins routes"]}
+    if current_user.state == UserState.ACTIVE:
+        match current_user.is_admin():
+            case True:
+                return {"result": ["here admins routes"]}
+            case _:
+                return {"result": ["here plain users roles"]}
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
