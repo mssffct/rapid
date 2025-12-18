@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.auth.schemas import User as PydanticUser  # Pydantic User
-from app.models import User as DBUser  # SQLAlchemy User
+from app.users.models import User as DBUser  # SQLAlchemy User
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

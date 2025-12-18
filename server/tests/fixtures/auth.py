@@ -4,7 +4,7 @@ import typing
 
 from app.core.types.auth import UserRole
 from app.core.types.states import UserState
-from app.models import User
+from app.users.models import User
 from app.auth.security import get_password_hash
 
 

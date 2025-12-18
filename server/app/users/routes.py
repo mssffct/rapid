@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
-
+from app.auth.dependencies import get_current_user
+from app.auth.schemas import User as PydanticUser
 from app.core.types.states import UserState
 from app.database import get_db_session
-from app.models import User as DBUser
+from app.users.models import User as DBUser
 from app.users.schemas import UserCreate, UserResponse, UserUpdate
 from app.auth.security import get_password_hash
 
@@ -14,7 +15,9 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
-    user: UserCreate, db_session: AsyncSession = Depends(get_db_session)
+    user: UserCreate,
+    current_user: PydanticUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Create new user
@@ -46,7 +49,10 @@ async def create_user(
 
 @router.patch("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def update_user(
-    user_id: UUID, user: UserUpdate, db_session: AsyncSession = Depends(get_db_session)
+    user_id: UUID,
+    user: UserUpdate,
+    current_user: PydanticUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Update user data"""
     user_to_update = await db_session.execute(
