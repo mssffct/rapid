@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import PermissionManager
 from app.auth.schemas import User as PydanticUser
 from app.core.types.states import UserState
 from app.database import get_db_session
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: UserCreate,
-    current_user: PydanticUser = Depends(get_current_user),
+    current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
@@ -51,7 +51,7 @@ async def create_user(
 async def update_user(
     user_id: UUID,
     user: UserUpdate,
-    current_user: PydanticUser = Depends(get_current_user),
+    current_user: PydanticUser = Depends(PermissionManager(["LA", "SA"])),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """Update user data"""

@@ -6,7 +6,7 @@ from app.database import init_db
 from app.auth.routes import router as auth_router
 from app.users.routes import router as users_router
 from app.auth.schemas import User as PydanticUser
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import PermissionManager
 from app.core.types.states import UserState
 
 
@@ -33,7 +33,7 @@ async def root():
 
 
 @app.get("/api/v1/routes_available", tags=["routes"])
-async def read_admin_data(current_user: PydanticUser = Depends(get_current_user)):
+async def read_routes(current_user: PydanticUser = Depends(PermissionManager("ALL"))):
     """
     Get admin routes
     """

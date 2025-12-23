@@ -12,7 +12,7 @@ from app.auth.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from app.exceptions import raise_401_exception
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import PermissionManager
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -36,7 +36,7 @@ async def get_token(
 
 
 @router.get("/whoami", response_model=PydanticUser)
-async def read_users_me(current_user: PydanticUser = Depends(get_current_user)):
+async def read_users_me(current_user: PydanticUser = Depends(PermissionManager("ALL"))):
     """
     Get user from token
     """
