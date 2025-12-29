@@ -2,6 +2,7 @@ from typing import List, TYPE_CHECKING
 from uuid import UUID, uuid4
 from sqlalchemy import Enum, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlmodel import UniqueConstraint
 
 from app.database import Base
 from app.core.types import states, auth
@@ -13,6 +14,9 @@ if TYPE_CHECKING:
 
 class Authenticator(Base):
     __tablename__ = "authenticator_table"
+    _table_args__ = (
+        UniqueConstraint("name", "auth_type", name="unique_user_name_constraint"),
+    )
     uuid: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str]
     auth_type: Mapped[str] = mapped_column(

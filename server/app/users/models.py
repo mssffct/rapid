@@ -21,6 +21,7 @@ users_groups_association = Table(
 
 class User(Base):
     __tablename__ = "user_table"
+
     uuid: Mapped[uuid_type] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str]
     real_name: Mapped[str]

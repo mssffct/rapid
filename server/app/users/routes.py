@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
+from typing import TYPE_CHECKING
 from sqlalchemy.future import select
 from uuid import UUID
 from app.auth.dependencies import PermissionManager
 from app.auth.schemas import User as PydanticUser
 from app.core.types.states import UserState
+from app.core.utils.database import check_exists
 from app.database import get_db_session
 from app.users.models import User as DBUser
 from app.users.schemas import UserCreate, UserResponse, UserUpdate
 from app.auth.security import get_password_hash
+
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -17,19 +22,13 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 async def create_user(
     user: UserCreate,
     current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
-    db_session: AsyncSession = Depends(get_db_session),
+    db_session: "AsyncSession" = Depends(get_db_session),
 ):
     """
     Create new user
     """
-    existing_user = await db_session.execute(
-        select(DBUser).filter(DBUser.name == user.name)
-    )
-    if existing_user.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
-        )
+    await check_exists(db_session, model=DBUser, field="name", value=user.name)
+
     hashed_password = get_password_hash(user.password)
 
     db_user = DBUser(
@@ -51,8 +50,8 @@ async def create_user(
 async def update_user(
     user_id: UUID,
     user: UserUpdate,
-    current_user: PydanticUser = Depends(PermissionManager(["LA", "SA"])),
-    db_session: AsyncSession = Depends(get_db_session),
+    current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
+    db_session: "AsyncSession" = Depends(get_db_session),
 ):
     """Update user data"""
     user_to_update = await db_session.execute(

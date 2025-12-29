@@ -3,7 +3,8 @@ import typing
 from pydantic import BaseModel
 from uuid import UUID
 
-from app.core.types.auth import UserRole
+from app.core.types.auth import UserRole, AuthType
+from app.core.types.states import AvailabilityState
 
 
 class UserBase(BaseModel):
@@ -37,3 +38,15 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     name: typing.Optional[str] = None
     exp: typing.Optional[int] = None
+
+
+class AuthenticatorBase(BaseModel):
+    uuid: UUID
+    name: str
+    auth_type: AuthType
+
+
+class AuthenticatorCreate(AuthenticatorBase):
+    state: AvailabilityState
+    priority: int
+    mfa: typing.Optional[UUID]

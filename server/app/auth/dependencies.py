@@ -2,7 +2,6 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from app.database import get_db_session
 from app.auth.schemas import TokenData, User as PydanticUser
@@ -13,6 +12,7 @@ from app.exceptions import raise_401_exception
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 all_roles = {"SA", "LA", "PU", "D"}
+
 
 class PermissionManager:
     def __init__(self, allowed_roles: str | set[str]):
