@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Authenticator(Base):
     __tablename__ = "authenticator_table"
     _table_args__ = (
-        UniqueConstraint("name", "auth_type", name="unique_user_name_constraint"),
+        UniqueConstraint("name", "auth_type", name="unique_auth_name_constraint"),
     )
     uuid: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str]

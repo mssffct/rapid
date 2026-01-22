@@ -8,6 +8,11 @@ class UserRole(enum.StrEnum):
     LICENSE_ADMIN = "LA"
 
 
+class AuthInstances(enum.StrEnum):
+    AUTH = "auth"
+    MFA = "mfa"
+
+
 class AuthType(enum.StrEnum):
     IP = "IP"
     DB = "DB"

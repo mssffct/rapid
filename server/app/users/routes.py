@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from typing import TYPE_CHECKING
 from sqlalchemy.future import select
 from uuid import UUID
 from app.auth.dependencies import PermissionManager
 from app.auth.schemas import User as PydanticUser
 from app.core.types.states import UserState
-from app.core.utils.database import check_exists
 from app.database import get_db_session
-from app.users.models import User as DBUser
+from app.users.models import User as DBUser, UsersGroup
 from app.users.schemas import UserCreate, UserResponse, UserUpdate
 from app.auth.security import get_password_hash
 
@@ -27,7 +26,16 @@ async def create_user(
     """
     Create new user
     """
-    await check_exists(db_session, model=DBUser, field="name", value=user.name)
+    existing = await db_session.execute(
+        select(DBUser)
+        .filter(DBUser.name == user.name)
+        .filter(DBUser.groups.any(UsersGroup.uuid.in_(user.groups)))
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
 
     hashed_password = get_password_hash(user.password)
 

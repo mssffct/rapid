@@ -41,9 +41,12 @@ class TokenData(BaseModel):
 
 
 class AuthenticatorBase(BaseModel):
-    uuid: UUID
     name: str
     auth_type: AuthType
+
+
+class AuthenticatorResponse(AuthenticatorBase):
+    uuid: UUID
 
 
 class AuthenticatorCreate(AuthenticatorBase):

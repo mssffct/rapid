@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     role: str | None = None
     state: str | None = None
     password: str
+    groups: list[UUID] = []
 
 
 class UserUpdate(BaseModel):

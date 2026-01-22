@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "bcrypt==4.3.0",
     "fastapi>=0.119.0",
+    "fastapi-localization>=0.0a2.dev3",
     "httpx>=0.28.1",
     "passlib[bcrypt]>=1.7.4",
     "pwdlib[argon2]>=0.3.0",

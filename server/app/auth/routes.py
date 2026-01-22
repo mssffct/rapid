@@ -6,12 +6,15 @@ from sqlalchemy.future import select
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.schemas.type_responses import TypeWithImageResponse
+from app.core.types import auth as auth_types, states
+from app.core.utils import modfinder
 from app.database import get_db_session
 from app.auth.schemas import (
     Token,
     User as PydanticUser,
-    AuthenticatorBase,
     AuthenticatorCreate,
+    AuthenticatorResponse,
 )
 from app.auth.security import (
     authenticate_user,
@@ -51,32 +54,59 @@ async def read_users_me(current_user: PydanticUser = Depends(PermissionManager("
     return current_user
 
 
-@router.post("/", response_model=AuthenticatorBase)
+@router.post("/", response_model=AuthenticatorResponse)
 async def auth_create(
     auth: AuthenticatorCreate,
-    current_user: PydanticUser = PermissionManager({"LA", "SA"}),
+    current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Create authenticator
-    :param auth:
-    :param current_user:
-    :param db_session:
-    :return:
     """
-    pass
+    try:
+        new_auth = AuthenticatorCreate(
+            name=auth.name,
+            auth_type=auth.auth_type,
+            state=auth.state or states.AvailabilityState.ACTIVE,
+            priority=auth.priority,
+            mfa=auth.mfa,
+        )
+        db_session.add(new_auth)
+        await db_session.commit()
+        await db_session.refresh(new_auth)
+        return AuthenticatorResponse(
+            uuid=new_auth.uuid, name=new_auth.name, auth_type=new_auth.auth_type
+        )
+    except Exception as e:
+        print(e)
 
 
 @router.get("/overview", response_model=List[AuthenticatorCreate])
 async def auths_overview(
-    current_user: PydanticUser = PermissionManager({"LA", "SA"}),
+    current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
     db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     List authenticators
-    :param current_user:
-    :param db_session:
-    :return:
     """
     result = await db_session.scalars(select(Authenticator))
     return result.all()
+
+
+@router.get("/types/{ins_type}", response_model=List[TypeWithImageResponse])
+async def types(
+    ins_type: str,
+    current_user: PydanticUser = Depends(PermissionManager({"LA", "SA"})),
+):
+    """
+    List authenticators types
+    """
+    result = []
+    match ins_type:
+        case auth_types.AuthInstances.AUTH:
+            result = await modfinder.load_modules("auth/auths", "authenticator")
+        case auth_types.AuthInstances.MFA:
+            result = await modfinder.load_modules("auth/mfas", "mfa")
+        case _:
+            pass
+    return [item.get_type_info(item) for item in result]

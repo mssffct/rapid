@@ -327,6 +327,18 @@ wheels = [
 ]
 
 [[package]]
+name = "fastapi-localization"
+version = "0.0a2.dev3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1f/fa/6dd859ec41cd413b0a913ca75b82a6284c1e40b7ab2e2b7e2b8fcdbd0ff3/fastapi-localization-0.0a2.dev3.tar.gz", hash = "sha256:ade508d602083d948a90a5fdf259c24f7b55609437c2180cc26da23df41e05c3", size = 4039, upload-time = "2021-06-13T18:40:05.206Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/78/a0f3144138c1ba20c1bec19ad46247f7aec1638d0a9f1751cf94baeea702/fastapi_localization-0.0a2.dev3-py3-none-any.whl", hash = "sha256:512160db955a2cdc077c11e682f09f113c2a4cca3f8d570627a5d8ed1f341417", size = 6433, upload-time = "2021-06-13T18:40:03.819Z" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.20.0"
 source = { registry = "https://pypi.org/simple" }
@@ -858,6 +870,7 @@ dependencies = [
     { name = "asyncpg" },
     { name = "bcrypt" },
     { name = "fastapi" },
+    { name = "fastapi-localization" },
     { name = "httpx" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "pwdlib", extra = ["argon2"] },
@@ -886,6 +899,7 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "bcrypt", specifier = "==4.3.0" },
     { name = "fastapi", specifier = ">=0.119.0" },
+    { name = "fastapi-localization", specifier = ">=0.0a2.dev3" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0" },

@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
 )
-from sqlalchemy import text
 
 from app.main import app
 from app.config import get_db_url
@@ -26,7 +25,8 @@ TestingSessionLocal = async_sessionmaker(
 @pytest_asyncio.fixture(scope="function", name="test_session", autouse=True)
 async def test_session():
     async with test_engine.begin() as conn:
-        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+        # TODO think about cleaning db
+        # await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
         await conn.commit()
 
