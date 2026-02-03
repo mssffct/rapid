@@ -1,4 +1,3 @@
-import bcrypt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -9,21 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.auth.schemas import User as PydanticUser  # Pydantic User
 from app.users.models import User as DBUser  # SQLAlchemy User
+from app.core.managers.crypto import CryptoManager
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-def get_password_hash(password: str) -> str:
-    """Хеширует пароль."""
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Проверяет соответствие открытого пароля хешированному."""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -54,6 +42,6 @@ async def authenticate_user(
     user = await get_user(db_session, username)
     if not user:
         return None
-    if not verify_password(password, user.password):
+    if not CryptoManager.verify_password(password, user.password):
         return None
     return PydanticUser(**user.__dict__)

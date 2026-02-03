@@ -6,5 +6,7 @@ server/logs
 
 *.sqlite3
 
+*.pem
+
 frontend/node_modules
 frontend/build

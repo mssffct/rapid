@@ -5,10 +5,10 @@ from uuid import UUID
 from app.auth.dependencies import PermissionManager
 from app.auth.schemas import User as PydanticUser
 from app.core.types.states import UserState
+from app.core.managers.crypto import CryptoManager
 from app.database import get_db_session
 from app.users.models import User as DBUser, UsersGroup
 from app.users.schemas import UserCreate, UserResponse, UserUpdate
-from app.auth.security import get_password_hash
 
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ async def create_user(
             detail="Username already registered",
         )
 
-    hashed_password = get_password_hash(user.password)
+    hashed_password = CryptoManager.get_password_hash(user.password)
 
     db_user = DBUser(
         name=user.name,
