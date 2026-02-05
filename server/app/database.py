@@ -1,8 +1,11 @@
+import json
+
 from uuid import uuid4, UUID
 from datetime import datetime
 from typing import Annotated
 
 from sqlalchemy import func
+from sqlalchemy.types import TypeDecorator, TEXT
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
@@ -12,6 +15,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 
 from app.config import get_db_url
+from app.core.managers.crypto import CryptoManager
 
 DATABASE_URL = get_db_url()
 
@@ -21,14 +25,50 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # настройка аннотаций
-int_pk = Annotated[int, mapped_column(primary_key=True)]
-uuid_pk: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
 created_at = Annotated[datetime, mapped_column(server_default=func.now())]
 updated_at = Annotated[
     datetime, mapped_column(server_default=func.now(), onupdate=datetime.now)
 ]
 str_uniq = Annotated[str, mapped_column(unique=True, nullable=False)]
 str_null_true = Annotated[str, mapped_column(nullable=True)]
+
+
+class EncryptedJSONType(TypeDecorator):
+    impl = TEXT
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        """
+        Обрабатывает значение перед сохранением в БД (шифрует).
+        """
+        if value is None:
+            return None
+        if not isinstance(value, dict):
+            raise TypeError("EncryptedJSONType ожидает словарь.")
+
+        # encrypt_data возвращает bytes, TEXT поле ожидает str
+        return CryptoManager.manager().encrypt_data(value).decode('utf-8')
+
+    def process_result_value(self, value, dialect):
+        """
+        Обрабатывает значение после извлечения из БД (дешифрует).
+        """
+        if value is None:
+            return None
+
+        try:
+            # value будет строкой из БД, но decrypt_data ожидает bytes
+            return CryptoManager.manager().decrypt_data(value.encode('utf-8'))
+        except Exception as e:
+            # Логирование ошибки или поднятие кастомной ошибки
+            print(f"Ошибка дешифрования данных из БД: {e}")
+            return None  # Или поднять исключение HTTPException
+
+    def copy_value(self, value):
+        # Глубокая копия для изменяемых объектов (словарей)
+        if value is not None:
+            return json.loads(json.dumps(value))  # Простой способ глубокой копии для JSON
+        return value
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -38,8 +78,15 @@ class Base(AsyncAttrs, DeclarativeBase):
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
 
+    uuid: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+
+
+class ManagedDBModel(Base):
+    __abstract__ = True
+
+    data: Mapped[str] = mapped_column(EncryptedJSONType, nullable=True)
 
 
 async def get_db_session():

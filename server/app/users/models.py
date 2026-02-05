@@ -22,7 +22,6 @@ users_groups_association = Table(
 class User(Base):
     __tablename__ = "user_table"
 
-    uuid: Mapped[uuid_type] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str]
     real_name: Mapped[str]
     state: Mapped[str] = mapped_column(
@@ -50,7 +49,7 @@ class User(Base):
 
 class UsersGroup(Base):
     __tablename__ = "users_group_table"
-    uuid: Mapped[uuid_type] = mapped_column(primary_key=True, default=uuid4)
+
     name: Mapped[str]
 
     users: Mapped[List["User"]] = relationship(

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     )
     ALGORITHM: str = "HS256"
+    ENCRYPTION_KEY: str | None = None
 
     @field_validator("POSTGRES_HOST", mode="before")
     @classmethod

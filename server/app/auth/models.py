@@ -1,10 +1,10 @@
 from typing import List, TYPE_CHECKING
-from uuid import UUID, uuid4
+from uuid import UUID
 from sqlalchemy import Enum, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlmodel import UniqueConstraint
 
-from app.database import Base
+from app.database import ManagedDBModel
 from app.core.types import states, auth
 
 
@@ -12,12 +12,12 @@ if TYPE_CHECKING:
     from app.users.models import UsersGroup
 
 
-class Authenticator(Base):
+class Authenticator(ManagedDBModel):
     __tablename__ = "authenticator_table"
     _table_args__ = (
         UniqueConstraint("name", "auth_type", name="unique_auth_name_constraint"),
     )
-    uuid: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+
     name: Mapped[str]
     auth_type: Mapped[str] = mapped_column(
         Enum(auth.AuthType), nullable=False, default=auth.AuthType.DB
@@ -28,16 +28,16 @@ class Authenticator(Base):
         default=states.AvailabilityState.ACTIVE,
     )
     priority: Mapped[int] = mapped_column(Integer, default=0)
-    mfa: Mapped[UUID] = mapped_column(ForeignKey("mfa_table.uuid"))
+    mfa: Mapped[UUID] = mapped_column(ForeignKey("mfa_table.uuid"), nullable=True)
     users_groups: Mapped[List["UsersGroup"]] = relationship(
         back_populates="authenticator",
         primaryjoin="Authenticator.uuid == foreign(UsersGroup.auth_uuid)",
     )
 
 
-class MFA(Base):
+class MFA(ManagedDBModel):
     __tablename__ = "mfa_table"
-    uuid: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+
     name: Mapped[str]
     mfa_type: Mapped[str] = mapped_column(
         Enum(auth.MFAType), nullable=False, default=auth.MFAType.TOTP

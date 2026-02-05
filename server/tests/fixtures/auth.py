@@ -4,8 +4,8 @@ import typing
 
 from app.core.types.auth import UserRole
 from app.core.types.states import UserState
+from app.core.managers.crypto import CryptoManager
 from app.users.models import User
-from app.auth.security import get_password_hash
 
 
 USERNAMES = [f"user_{index}" for index in range(10)]
@@ -18,7 +18,7 @@ async def create_user(test_session, role: UserRole) -> typing.Optional[User]:
     user = User(
         name=name,
         real_name=real_name,
-        password=get_password_hash(PASSWD),
+        password=CryptoManager.manager().get_password_hash(PASSWD),
         role=role,
         state=UserState.ACTIVE,
     )

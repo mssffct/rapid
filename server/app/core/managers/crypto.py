@@ -1,37 +1,48 @@
 import bcrypt
+import json
 
-from pathlib import Path
-from typing import TYPE_CHECKING, cast
-
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
+from cryptography.fernet import Fernet
 
 from app.core.utils import singleton
-
-if TYPE_CHECKING:
-    from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from app.config import settings
+from app.core.exceptions import NoEncryptionKey
 
 
 class CryptoManager(metaclass=singleton.Singleton):
-    _rsa: "RSAPrivateKey"
+    _fernet_ins: "Fernet"
 
     def __init__(self):
-        #  openssl genrsa -out private.pem 2048 command in server directory on app deploy
-        self._rsa = cast(
-            "RSAPrivateKey",
-            serialization.load_pem_private_key(self.read_rsa_key(), password=None, )
-        )
-
-    @staticmethod
-    def read_rsa_key():
-        rsa = Path("/app/private.pem")  # change to more safe in future
-        with open(rsa, "r") as file:
-            res = file.read()
-        return res.encode()
+        # from cryptography.fernet import Fernet
+        # fernet_key = Fernet.generate_key()
+        # print(fernet_key.decode()) -> .env
+        self.get_fernet_ins()
 
     @staticmethod
     def manager() -> 'CryptoManager':
         return CryptoManager()
+
+    def get_fernet_ins(self) -> None:
+        key = settings.ENCRYPTION_KEY
+        if key:
+            if isinstance(key, str):
+                key = key.encode('utf-8')
+            self._fernet_ins = Fernet(key)
+        else:
+            raise NoEncryptionKey
+
+
+    def encrypt_data(self, data: dict) -> bytes:
+        """Encrypt data"""
+        json_data = json.dumps(data)
+        encrypted_bytes = self._fernet_ins.encrypt(json_data.encode('utf-8'))
+        return encrypted_bytes
+
+    def decrypt_data(self, encrypted_bytes: bytes) -> dict:
+        """Дешифрует байты в словарь данных."""
+        decrypted_bytes = self._fernet_ins.decrypt(encrypted_bytes)
+        json_data = decrypted_bytes.decode('utf-8')
+        data = json.loads(json_data)
+        return data
 
     @staticmethod
     def get_password_hash(password: str) -> str:
