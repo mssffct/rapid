@@ -5,6 +5,8 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       cache:
         condition: service_healthy
@@ -18,7 +20,8 @@ services:
       - broker-logs:/app/logs
       - ../server/app:/app/app
     networks:
-      - rapid
+      - db
+      - cache
 
   db:
     container_name: db
@@ -39,7 +42,7 @@ services:
       retries: 5
     command: -p ${POSTGRES_PORT}
     networks:
-      - rapid
+      - db
 
   cache:
     image: memcached:1.6-alpine
@@ -56,7 +59,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - rapid
+      - cache
 
 volumes:
   dev-vol:
@@ -80,5 +83,7 @@ volumes:
 
 
 networks:
-  rapid:
+  db:
+    driver: bridge
+  cache:
     driver: bridge
