@@ -1,5 +1,8 @@
 import bcrypt
 import json
+import lzma
+
+from typing import Any
 
 from cryptography.fernet import Fernet
 
@@ -18,29 +21,31 @@ class CryptoManager(metaclass=singleton.Singleton):
         self.get_fernet_ins()
 
     @staticmethod
-    def manager() -> 'CryptoManager':
+    def manager() -> "CryptoManager":
         return CryptoManager()
 
     def get_fernet_ins(self) -> None:
         key = settings.ENCRYPTION_KEY
         if key:
             if isinstance(key, str):
-                key = key.encode('utf-8')
+                key = key.encode("utf-8")
             self._fernet_ins = Fernet(key)
         else:
             raise NoEncryptionKey
 
-
-    def encrypt_data(self, data: dict) -> bytes:
+    async def encrypt_data(self, data: Any) -> bytes:
         """Encrypt data"""
-        json_data = json.dumps(data)
-        encrypted_bytes = self._fernet_ins.encrypt(json_data.encode('utf-8'))
+        if isinstance(data, dict):
+            json_data = json.dumps(data)
+            encrypted_bytes = self._fernet_ins.encrypt(json_data.encode("utf-8"))
+        else:
+            encrypted_bytes = self._fernet_ins.encrypt(lzma.compress(data))
         return encrypted_bytes
 
-    def decrypt_data(self, encrypted_bytes: bytes) -> dict:
+    async def decrypt_data(self, encrypted_bytes: bytes) -> dict:
         """Дешифрует байты в словарь данных."""
         decrypted_bytes = self._fernet_ins.decrypt(encrypted_bytes)
-        json_data = decrypted_bytes.decode('utf-8')
+        json_data = decrypted_bytes.decode("utf-8")
         data = json.loads(json_data)
         return data
 

@@ -10,6 +10,7 @@ from alembic import context
 from app.database import DATABASE_URL, Base
 from app.users.models import User, UsersGroup
 from app.auth.models import Authenticator, MFA
+from app.models import Cache
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

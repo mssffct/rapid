@@ -8,3 +8,6 @@ class IPAuth(BaseAuthenticator):
     module_name = _("IP Authenticator")
     module_type = "IPAuth"
     module_desc = _("Using IP to authenticate")
+
+    def authenticate(self):
+        pass

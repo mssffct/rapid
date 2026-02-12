@@ -8,3 +8,8 @@ class DBAuth(BaseAuthenticator):
     module_name = _("Database Authenticator")
     module_type = "DBAuth"
     module_desc = _("Using database  to authenticate")
+
+    external = False
+
+    def authenticate(self):
+        pass

@@ -44,22 +44,18 @@ services:
     networks:
       - db
 
-  cache:
-    image: memcached:1.6-alpine
-    container_name: cache
-    restart: unless-stopped
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis
+    restart: always
     expose:
-      - ${MEMCACHED_PORT}
-    entrypoint:
-      - memcached
-      - -m 64
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "11211"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      -${REDIS_PORT}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASS}
+    volumes:
+      - redis-volume:/data
     networks:
-      - cache
+      - redis
+
 
 volumes:
   dev-vol:
@@ -80,10 +76,16 @@ volumes:
       type: 'none'
       o: 'bind'
       device: /usr/rapid/postgres
+  redis-volume:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: /usr/rapid/redis
 
 
 networks:
   db:
     driver: bridge
-  cache:
+  redis:
     driver: bridge

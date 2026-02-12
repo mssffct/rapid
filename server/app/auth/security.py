@@ -1,20 +1,20 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from jose import jwt
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.auth.schemas import User as PydanticUser  # Pydantic User
-from app.users.models import User as DBUser  # SQLAlchemy User
+from app.auth.schemas import User as PydanticUser
 from app.core.managers.crypto import CryptoManager
+from app.users.crud import get_user
 
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Создает JWT токен доступа."""
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
@@ -29,15 +29,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-async def get_user(db_session: AsyncSession, name: str) -> Optional[DBUser]:
-    """Получает пользователя из базы данных."""
-    result = await db_session.execute(select(DBUser).filter(DBUser.name == name))
-    return result.scalar_one_or_none()
-
-
 async def authenticate_user(
-    db_session: AsyncSession, username: str, password: str
-) -> Optional[PydanticUser]:
+    db_session: "AsyncSession", username: str, password: str
+) -> PydanticUser | None:
     """Аутентифицирует пользователя по имени и паролю."""
     user = await get_user(db_session, username)
     if not user:

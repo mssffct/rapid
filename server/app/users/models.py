@@ -1,7 +1,7 @@
 from typing import List, TYPE_CHECKING
 from sqlalchemy import Text, Enum, Table, Column, ForeignKey, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from uuid import UUID as uuid_type, uuid4
+from uuid import UUID as uuid_type
 
 from app.database import Base
 from app.core.types import states, auth

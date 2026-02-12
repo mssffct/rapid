@@ -37,7 +37,7 @@ class EncryptedJSONType(TypeDecorator):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    async def process_bind_param(self, value, dialect):
         """
         Обрабатывает значение перед сохранением в БД (шифрует).
         """
@@ -47,9 +47,9 @@ class EncryptedJSONType(TypeDecorator):
             raise TypeError("EncryptedJSONType ожидает словарь.")
 
         # encrypt_data возвращает bytes, TEXT поле ожидает str
-        return CryptoManager.manager().encrypt_data(value).decode('utf-8')
+        return CryptoManager.manager().encrypt_data(value).decode("utf-8")
 
-    def process_result_value(self, value, dialect):
+    async def process_result_value(self, value, dialect):
         """
         Обрабатывает значение после извлечения из БД (дешифрует).
         """
@@ -58,16 +58,18 @@ class EncryptedJSONType(TypeDecorator):
 
         try:
             # value будет строкой из БД, но decrypt_data ожидает bytes
-            return CryptoManager.manager().decrypt_data(value.encode('utf-8'))
+            return await CryptoManager.manager().decrypt_data(value.encode("utf-8"))
         except Exception as e:
             # Логирование ошибки или поднятие кастомной ошибки
             print(f"Ошибка дешифрования данных из БД: {e}")
             return None  # Или поднять исключение HTTPException
 
-    def copy_value(self, value):
+    async def copy_value(self, value):
         # Глубокая копия для изменяемых объектов (словарей)
         if value is not None:
-            return json.loads(json.dumps(value))  # Простой способ глубокой копии для JSON
+            return json.loads(
+                json.dumps(value)
+            )  # Простой способ глубокой копии для JSON
         return value
 
 

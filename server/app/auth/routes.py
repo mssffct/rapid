@@ -1,9 +1,8 @@
 from datetime import timedelta
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.future import select
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.schemas.type_responses import TypeWithImageResponse
@@ -11,10 +10,11 @@ from app.core.types import auth as auth_types, states
 from app.core.utils import modfinder
 from app.database import get_db_session
 from app.auth.schemas import (
-    Token,
+    LoginResponse,
     User as PydanticUser,
     AuthenticatorCreate,
     AuthenticatorResponse,
+    LoginForm,
 )
 from app.auth.security import (
     authenticate_user,
@@ -24,18 +24,41 @@ from app.auth.security import (
 from app.exceptions import raise_401_exception
 from app.auth.dependencies import PermissionManager
 from app.auth.models import Authenticator
+from app.auth.crud import get_authenticator
+from app.core.consts import RPD_COOKIE_NAME
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=Token)
-async def get_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+@router.post("/login", response_model=LoginResponse)
+async def login(
+    request: Request,
+    form_data: LoginForm = Depends(),
     db_session: AsyncSession = Depends(get_db_session),
-) -> Token:
+) -> LoginResponse:
     """
-    Obtain jwt token.
+    Authenticate user with authenticator and mfa (if required) to get token
+    1) Check if authenticator exists and not disabled
+    2) Check if broker cookie in request
+    3) Ask cache manager for number of failed login attempts. If it exceeds
+    the number specified in app config - unauthenticated response and block for time specified in
+    app config.
+    3) Check credentials (or register user) by authenticator
+    4) If mfa is enabled ask cache manager for current mfa state if it passed, failed or skipped (results are stored for
+    time specified in app config)
+    If mfa not passed unauthenticated response with mfa_required result returned
+    If mfa is skipped or passed provide token
     """
+    if not form_data.authenticator:
+        await raise_401_exception("No authenticator uuid provided")
+    try:
+        auth = await get_authenticator(db_session, form_data.authenticator)
+    except ValueError as e:
+        await raise_401_exception(str(e))
+    if RPD_COOKIE_NAME not in request.cookies:
+        await raise_401_exception("Access from unknown source")
+    # TODO cache manager request for login attempts
+
     user = await authenticate_user(db_session, form_data.username, form_data.password)
     if not user:
         await raise_401_exception("Incorrect username or password")
@@ -43,7 +66,9 @@ async def get_token(
     access_token = create_access_token(
         data={"sub": user.name}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return LoginResponse(
+        access_token=access_token, token_type="bearer", result="success"
+    )
 
 
 @router.get("/whoami", response_model=PydanticUser)
