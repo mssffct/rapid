@@ -3,19 +3,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.future import select
 from typing import TYPE_CHECKING
 from datetime import datetime, timezone, timedelta
-from app.database import Base
+from app.database import ManagedDBModel
 
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class Cache(Base):
+class Cache(ManagedDBModel):
     __tablename__ = "cache_table"
 
-    owner: Mapped[str] = mapped_column(String(128), default="unknown")
-    key: Mapped[str] = mapped_column(String(128))
-    value: Mapped[str]
+    owner: Mapped[str] = mapped_column(String(128), primary_key=True)
 
     validity: Mapped[int]  # validity in seconds
 
