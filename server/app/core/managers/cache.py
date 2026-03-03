@@ -17,24 +17,32 @@ class CacheManager:
         self.db_session = db_session
 
     @staticmethod
-    def manager() -> "CacheManager":
-        return CacheManager()
+    def manager(**kwargs) -> "CacheManager":
+        return CacheManager(**kwargs)
 
-    async def get(self, owner: str, delete: bool = False) -> DBCache | None:
+    async def get(self, owner: str, delete_after: bool = False) -> DBCache | None:
         if self.db_session:
-            cached_ins = await self.db_session.get(DBCache, owner)
+            query = await self.db_session.execute(
+                select(DBCache).filter_by(owner=owner)
+            )
+            cached_ins = query.scalar_one_or_none()
             if cached_ins:
                 valid = await self.validate(cached_ins)
-                if not valid or delete:
+                if not valid or delete_after:
                     await atomic_op(self.db_session, Ops.DEL, cached_ins)
+                    return cached_ins
             return cached_ins
         return None
 
-    async def pop(self):
-        return await self.get(delete=True)
+    async def pop(self, owner: str):
+        return await self.get(owner, delete_after=True)
 
-    async def put(self, owner: str, data: Any):
-        pass
+    async def put(self, owner: str, data: Any, validity: int) -> bool:
+        if self.db_session:
+            cache_ins = DBCache(owner=owner, data=data, validity=validity)
+            result = await atomic_op(self.db_session, op=Ops.ADD, ins=cache_ins)
+            return result
+        return False
 
     @staticmethod
     async def validate(ins: "DBCache") -> bool:

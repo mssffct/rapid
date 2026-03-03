@@ -1,10 +1,10 @@
 import json
 
 from uuid import uuid4, UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated
 
-from sqlalchemy import func
+from sqlalchemy import func, DateTime
 from sqlalchemy.types import TypeDecorator, TEXT
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -25,9 +25,11 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # настройка аннотаций
-created_at = Annotated[datetime, mapped_column(server_default=func.now())]
+created_at = Annotated[datetime, mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))]
 updated_at = Annotated[
-    datetime, mapped_column(server_default=func.now(), onupdate=datetime.now)
+    datetime, mapped_column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)
+    )
 ]
 str_uniq = Annotated[str, mapped_column(unique=True, nullable=False)]
 str_null_true = Annotated[str, mapped_column(nullable=True)]
@@ -37,7 +39,7 @@ class EncryptedJSONType(TypeDecorator):
     impl = TEXT
     cache_ok = True
 
-    async def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value, dialect):
         """
         Обрабатывает значение перед сохранением в БД (шифрует).
         """
@@ -47,9 +49,10 @@ class EncryptedJSONType(TypeDecorator):
             raise TypeError("EncryptedJSONType ожидает словарь.")
 
         # encrypt_data возвращает bytes, TEXT поле ожидает str
-        return CryptoManager.manager().encrypt_data(value).decode("utf-8")
+        data = CryptoManager.manager().encrypt_data(value)
+        return data.decode("utf-8")
 
-    async def process_result_value(self, value, dialect):
+    def process_result_value(self, value, dialect):
         """
         Обрабатывает значение после извлечения из БД (дешифрует).
         """
@@ -58,7 +61,7 @@ class EncryptedJSONType(TypeDecorator):
 
         try:
             # value будет строкой из БД, но decrypt_data ожидает bytes
-            return await CryptoManager.manager().decrypt_data(value.encode("utf-8"))
+            return CryptoManager.manager().decrypt_data(value.encode("utf-8"))
         except Exception as e:
             # Логирование ошибки или поднятие кастомной ошибки
             print(f"Ошибка дешифрования данных из БД: {e}")

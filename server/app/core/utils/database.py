@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 class Ops(enum.StrEnum):
     DEL = "DEL"
     UPD = "UPD"
+    ADD = "ADD"
 
 
 async def check_exists(
@@ -27,15 +28,17 @@ async def check_exists(
         )
 
 
-async def atomic_op(db_session: "AsyncSession", op: Ops, ins: Any):
+async def atomic_op(db_session: "AsyncSession", op: Ops, ins: Any) -> bool:
     async with db_session as session:
         try:
             match op:
+                case Ops.ADD:
+                    session.add(ins)
                 case Ops.DEL:
                     await session.delete(ins)
-                case _:
-                    pass
             await session.commit()
+            return True
         except Exception as e:
+            print(e)
             await session.rollback()
-
+            return False

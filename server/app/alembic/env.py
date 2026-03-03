@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.database import DATABASE_URL, Base
+from app.config import get_db_url
 from app.users.models import User, UsersGroup
 from app.auth.models import Authenticator, MFA
 from app.models import Cache
@@ -16,7 +17,10 @@ from app.models import Cache
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+x_arg = context.get_x_argument()
+database = "test" if x_arg and x_arg[0] == "test" else None
+db_url = get_db_url(database)
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

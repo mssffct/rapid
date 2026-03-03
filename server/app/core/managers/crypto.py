@@ -33,7 +33,7 @@ class CryptoManager(metaclass=singleton.Singleton):
         else:
             raise NoEncryptionKey
 
-    async def encrypt_data(self, data: Any) -> bytes:
+    def encrypt_data(self, data: Any) -> bytes:
         """Encrypt data"""
         if isinstance(data, dict):
             json_data = json.dumps(data)
@@ -42,7 +42,7 @@ class CryptoManager(metaclass=singleton.Singleton):
             encrypted_bytes = self._fernet_ins.encrypt(lzma.compress(data))
         return encrypted_bytes
 
-    async def decrypt_data(self, encrypted_bytes: bytes) -> dict:
+    def decrypt_data(self, encrypted_bytes: bytes) -> dict:
         """Дешифрует байты в словарь данных."""
         decrypted_bytes = self._fernet_ins.decrypt(encrypted_bytes)
         json_data = decrypted_bytes.decode("utf-8")
