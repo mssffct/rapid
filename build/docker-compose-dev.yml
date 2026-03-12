@@ -8,7 +8,7 @@ services:
     security_opt:
       - no-new-privileges:true
     depends_on:
-      cache:
+      redis:
         condition: service_healthy
       db:
         condition: service_healthy
@@ -21,7 +21,7 @@ services:
       - ../server/app:/app/app
     networks:
       - db
-      - cache
+      - redis
 
   db:
     container_name: db
@@ -47,10 +47,40 @@ services:
   redis:
     image: redis:7.4-alpine
     container_name: redis
-    restart: always
+    mem_limit: 512m
     expose:
-      -${REDIS_PORT}
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASS}
+      - ${REDIS_PORT}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: >
+      sh -c '
+        mkdir -p /usr/local/etc/redis &&
+        echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
+        echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
+        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
+      '
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    tty: true
+    stdin_open: true
     volumes:
       - redis-volume:/data
     networks:
