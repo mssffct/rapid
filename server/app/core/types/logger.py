@@ -13,7 +13,6 @@ class LoggerHandler:
     encoding: str = "utf-8"
 
 
-
 class LogLevels(enum.StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"

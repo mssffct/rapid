@@ -37,6 +37,8 @@ WORKDIR /app
 # copy files from build stage
 COPY --from=builder --chown=appuser:appgroup /app /app
 
+RUN mkdir -p logs && chown appuser:appgroup logs
+
 # app env to path
 ENV PATH="/app/.venv/bin:$PATH"
 

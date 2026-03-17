@@ -8,7 +8,10 @@ from app.users.routes import router as users_router
 from app.auth.schemas import User as PydanticUser
 from app.auth.dependencies import PermissionManager
 from app.core.types.states import UserState
-from app.logger_config import setup_logging
+from app.logger_config import get_logger
+
+
+logger = get_logger("generalLog")
 
 
 @asynccontextmanager
@@ -26,8 +29,6 @@ app = FastAPI(
 
 app.include_router(auth_router)
 app.include_router(users_router)
-
-setup_logging()
 
 
 @app.get("/api/v1")

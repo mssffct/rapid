@@ -1,4 +1,5 @@
 .venv
+.gitignore
 
 server/.ruff_cache
 server/.pytest_cache

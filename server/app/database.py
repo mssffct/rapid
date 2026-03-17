@@ -4,7 +4,7 @@ from uuid import uuid4, UUID
 from datetime import datetime, timezone
 from typing import Annotated
 
-from sqlalchemy import func, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.types import TypeDecorator, TEXT
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -25,11 +25,16 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # настройка аннотаций
-created_at = Annotated[datetime, mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))]
+created_at = Annotated[
+    datetime, mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+]
 updated_at = Annotated[
-    datetime, mapped_column(
-        DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)
-    )
+    datetime,
+    mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc),
+    ),
 ]
 str_uniq = Annotated[str, mapped_column(unique=True, nullable=False)]
 str_null_true = Annotated[str, mapped_column(nullable=True)]
