@@ -6,8 +6,33 @@ from logging.handlers import RotatingFileHandler
 
 ROTATINGSIZE = 32 * 1024 * 1024
 
+class ColoredFormatter(logging.Formatter):
+    def __init__(self, datefmt: str,  strfmt: str | None = None):
+        super(ColoredFormatter, self).__init__()
+        self.datefmt = datefmt
+        self.strfmt = strfmt or "%(levelname)s %(asctime)s %(message)s"
+
+        grey = "\x1b[38;20m"
+        yellow = "\x1b[33;20m"
+        red = "\x1b[31;20m"
+        bold_red = "\x1b[31;1m"
+        reset = "\x1b[0m"
+
+        self.formats = {
+            logging.DEBUG: grey + self.strfmt + reset,
+            logging.INFO: grey + self.strfmt + reset,
+            logging.WARNING: yellow + self.strfmt + reset,
+            logging.ERROR: red + self.strfmt + reset,
+            logging.CRITICAL: bold_red + self.strfmt + reset
+        }
+
+    def format(self, record):
+        log_fmt = self.formats.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
 LOGGING_FORMATTERS = {
-    "verbose": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
+    "verbose": "%(levelname)s %(asctime)s %(module)s:%(lineno)d %(message)s",
     "trace": "%(levelname)s %(asctime)s %(message)s",
 }
 
@@ -55,7 +80,7 @@ def get_logger(mod_name: str, level: str = logging.INFO) -> logging.Logger:
     ins = LOG_HANDLERS.get(mod_name)
     fmt = ins.pop("formatter")
     handler = RotatingFileHandler(**ins)
-    handler.setFormatter(logging.Formatter(fmt, LOGGING_DATE_FMT))
+    handler.setFormatter(ColoredFormatter(LOGGING_DATE_FMT, fmt))
     logger = logging.getLogger(mod_name)
     logger.setLevel(level)
     logger.addHandler(handler)

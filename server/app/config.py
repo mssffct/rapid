@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     SECRET_KEY: str
     REDIS_PORT: str
-    REDIS_PASS: str
+    REDIS_PASSWORD: str
+    REDIS_USER: str
+    REDIS_USER_PASSWORD: str
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     )

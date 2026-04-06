@@ -33,7 +33,7 @@ app.include_router(users_router)
 
 @app.get("/api/v1")
 async def root():
-    return {"message": "Welcome to the FastAPI Token Auth Example!"}
+    return {"message": "Welcome to rapid broker!"}
 
 
 @app.get("/api/v1/routes_available", tags=["routes"])
